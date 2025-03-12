@@ -1,8 +1,6 @@
-## 1️⃣ 테이블 설계 및 데이터 삽입
+# 1️⃣ 테이블 설계 및 데이터 삽입
 
-### **테이블 생성**
-
-먼저, 이메일 메시지를 저장할 테이블을 생성합니다.
+## **테이블 생성**
 
 ```sql
 CREATE TABLE messages (
@@ -16,112 +14,93 @@ CREATE TABLE messages (
 ```
 
 - **컬럼 설명**:
-    - `id`: 메시지의 고유 식별자 (자동 증가)
-    - `email`: 발신자의 이메일 주소
-    - `sent_at`: 이메일 발송 시간 (타임스탬프)
-    - `subject`: 이메일 제목
-    - `headers`: 이메일 헤더 정보 (원시 메타데이터)
-    - `body`: 이메일 본문 (검색 대상)
+    - `id`: 고유 식별자
+    - `email`: 발신자 이메일 주소
+    - `sent_at`: 메일 발송 시간
+    - `subject`: 메일 제목
+    - `headers`: 메일 헤더 정보
+    - `body`: 메일 본문
 
-### **데이터 삽입 예시**
-
-샘플 데이터를 삽입하여 테이블을 채워봅니다.
+## **데이터 삽입 예시**
 
 ```sql
 INSERT INTO messages (email, sent_at, subject, headers, body) VALUES
-('user@example.com', '2025-03-10 10:00:00', 'Hello World', 'Header info', 'This is the body of the email.'),
-('admin@example.com', '2025-03-11 12:30:00', 'Meeting Schedule', 'Header info', 'Our next meeting is scheduled for tomorrow at 10 AM.'),
-('staff@example.com', '2025-03-12 15:45:00', 'Project Update', 'Header info', 'The project is progressing well. Here are the latest updates.');
+('user@example.com', '2025-03-10 10:00:00', 'Hello World', 'Header info', 'This is the body of the email.');
 ```
 
 ---
 
-## 2️⃣ 전문 검색 설정
+# 2️⃣ 전문 검색 설정 (Full-Text Search)
 
-PostgreSQL의 **전문 검색(Full-Text Search)** 기능을 사용하면 자연어 검색을 보다 효율적으로 수행할 수 있습니다.
+- **TSVECTOR** : **문서를 색인할 때 사용하는 데이터 타입**. 텍스트를 토큰화(tokenization)하고 정규화(normalization)하여 저장.
+- **TSQUERY** : **검색어를 표현하는 데이터 타입**. 특정 단어나 구문을 검색할 때 사용.
 
-### **TSVECTOR 및 TSQUERY**
-
-- **`tsvector`**: 텍스트를 분석하여 검색 가능한 형태로 변환하는 데이터 타입
-- **`tsquery`**: 검색어를 표현하는 데이터 타입 (논리 연산자 사용 가능)
-
-### **`tsvector` 생성 예제**
-
-다음 명령어를 실행하면 텍스트가 색인화됩니다.
+### **`tsvector` 생성**
 
 ```sql
 SELECT to_tsvector('english', 'This is a sample document.');
 ```
 
-- 결과:
-  ```
-  'document':5 'sampl':4 'thi':1
-  ```
+- **불용어(Stop Words) 제거** → "is", "a" 같은 의미 없는 단어 삭제됨.
+- **어간 추출(Stemming) 적용** → "sample" → "sampl", "this" → "thi" 등으로 변환.
+- **단어별 위치 저장** → `'sampl':4`는 **4번째 단어가 "sample"이었음**을 의미.
+- 결과: `'document':5 'sampl':4 'thi':1`
 
-단어가 정규화되었으며, 위치 정보도 포함됩니다.
-
-### **`tsquery` 생성 예제**
+### **`tsquery` 생성**
 
 ```sql
 SELECT to_tsquery('english', 'sample & document');
 ```
 
-- 결과:
-  ```
-  'sampl' & 'document'
-  ```
-
-연산자 `&`는 AND 조건을 의미합니다.
+- **"sample"이 "sampl"로 변환됨** → **어간 추출 적용**.
+- **"&"는 AND 연산자 역할** → "sample"과 "document"가 **둘 다 포함된 문서를 검색**.
+- 결과: `'sampl' & 'document'`
 
 ---
 
-## 3️⃣ 전문 검색 인덱스 생성
+# 3️⃣ 전문 검색 인덱스 생성
 
-전문 검색을 최적화하려면 **GIN(Generalized Inverted Index)** 인덱스를 생성해야 합니다.
+## **GIN 인덱스 생성**
 
 ```sql
 CREATE INDEX idx_messages_body ON messages USING GIN(to_tsvector('english', body));
 ```
 
-- **GIN 인덱스의 장점**:
-    - 다중 값이 포함된 텍스트 데이터의 검색 속도를 최적화
-    - `to_tsvector()`의 결과를 미리 색인하여 검색 시 빠르게 접근 가능
+- **GIN(Generalized Inverted Index)**: 다수의 값이 포함된 컬럼에 효율적인 인덱스
 
 ---
 
-## 4️⃣ 전문 검색 쿼리 실행
-
-### **기본 검색 예제**
+# 4️⃣ 전문 검색 쿼리 실행
 
 ```sql
 SELECT * FROM messages
-WHERE to_tsvector('english', body) @@ to_tsquery('english', 'meeting & schedule');
+WHERE to_tsvector('english', body) @@ to_tsquery('english', 'sample & document');
 ```
 
-- `@@` 연산자는 `tsvector`와 `tsquery`를 비교하여 일치하는 경우 `TRUE`를 반환합니다.
-- 예제에서는 'meeting'과 'schedule'이 모두 포함된 이메일을 검색합니다.
+- **`@@` 연산자**: `tsvector`와 `tsquery`를 비교하여 일치 여부를 반환
 
-### **부분 검색**
+**`messages` 테이블 데이터**
 
-일부 단어만 포함된 문서를 검색하고 싶다면 `|`(OR 연산자)를 사용할 수 있습니다.
+| id | body |
+| --- | --- |
+| 1 | This is a sample document. |
+| 2 | This document contains a sample text. |
+| 3 | This is another text without sample. |
 
-```sql
-SELECT * FROM messages
-WHERE to_tsvector('english', body) @@ to_tsquery('english', 'project | update');
-```
+🔍 **결과**
 
-- `|` 연산자는 OR 조건을 의미합니다.
-- 'project' 또는 'update' 단어가 포함된 문서를 검색합니다.
+| id | body |
+| --- | --- |
+| 1 | This is a sample document. |
+| 2 | This document contains a sample text. |
+
+✅ **"sample"과 "document"가 포함된 문서만 검색**
 
 ---
 
-## 5️⃣ 가중치 및 순위 설정
+# 5️⃣ 가중치 및 순위 설정
 
-전문 검색에서는 **검색 결과의 중요도(랭킹)를 조정**할 수 있습니다.
-
-### **가중치 부여**
-
-제목(subject)에 더 높은 가중치를 부여하고, 본문(body)에는 상대적으로 낮은 가중치를 적용할 수 있습니다.
+## **가중치 부여**
 
 ```sql
 SELECT setweight(to_tsvector('english', coalesce(subject, '')), 'A') ||
@@ -129,12 +108,17 @@ SELECT setweight(to_tsvector('english', coalesce(subject, '')), 'A') ||
 FROM messages;
 ```
 
-- 'A' > 'B' > 'C' > 'D' 순으로 높은 가중치를 가짐
-- 제목(subject)은 중요한 키워드를 포함하는 경우가 많으므로, 높은 우선순위를 부여함
+- **`setweight` 함수**: 텍스트에 가중치를 부여하여 검색 결과의 우선순위를 설정
+    - 'A' > 'B' > 'C' > 'D' 순으로 높은 가중치
 
-### **순위 계산**
+| document |
+| --- |
+| 'hello':1A 'sample':2B 'document':3B |
 
-검색된 결과의 순위를 매겨, 더 관련성이 높은 결과를 상위에 표시합니다.
+→ 
+제목(`subject`)은 높은 우선순위(`A`), 본문(`body`)은 그보다 낮은 우선순위(`B`)를 가지게 됨!
+
+## **순위 계산**
 
 ```sql
 SELECT ts_rank_cd(to_tsvector('english', body), to_tsquery('english', 'sample & document')) AS rank,
@@ -144,70 +128,140 @@ WHERE to_tsvector('english', body) @@ to_tsquery('english', 'sample & document')
 ORDER BY rank DESC;
 ```
 
-- `ts_rank_cd()` 함수는 검색어와 문서 간의 관련성을 평가하여 랭킹을 부여합니다.
+- **`ts_rank_cd` 함수**: 문서와 검색어의 일치 정도를 계산하여 순위를 매김
+
+| rank | id | body |
+| --- | --- | --- |
+| 0.75 | 1 | This is a sample document. |
+| 0.60 | 2 | This document contains a sample text. |
+| 0.30 | 3 | This is another document example. |
+
+### **`ts_rank_cd` vs.  `ts_rank`**
+
+| 함수 | 설명 |
+| --- | --- |
+| **`ts_rank`** | 문서 길이를 고려하여 점수를 계산 |
+| **`ts_rank_cd`** | 문서 길이를 고려하지 않고 단순 계산 (속도가 빠름) |
+
+✅ **검색 성능을 최적화하려면 `ts_rank_cd`가 더 유리**
 
 ---
 
-## 6️⃣ 불용어(Stop Words) 처리
+# 6️⃣ 사전 및 불용어 처리
 
-전문 검색에서는 **검색어로서 의미가 적은 단어(불용어, stop words)** 를 필터링할 수 있습니다.
-
-### **사용 가능한 사전 확인**
+## **사용 가능한 사전 확인**
 
 ```sql
 SELECT * FROM pg_ts_config;
 ```
 
-- PostgreSQL에서 지원하는 텍스트 구성 목록을 확인할 수 있습니다.
+- PostgreSQL에서 지원하는 텍스트 구성 목록을 확인
 
-### **불용어 목록 확인**
+| oid | cfgname | cfgnamespace | cfgowner | cfgparser |
+| --- | --- | --- | --- | --- |
+| 3734 | english | 11 | 10 | 3722 |
+| 3735 | simple | 11 | 10 | 3722 |
+| 3736 | german | 11 | 10 | 3722 |
 
-```sql
-SELECT * FROM ts_debug('english', 'This is a test');
+## **불용어(Stop Words) 처리**
+
+- 불용어: 검색 시 의미가 적은 단어들(e.g., 'a', 'the', 'is')
+- PostgreSQL은 언어별 불용어 목록을 제공하며, 필요에 따라 사용자 정의 가능
+
+### **사용자 정의 불용어 목록 생성**
+
+PostgreSQL에서는 **사용자 정의 불용어 사전을 만들 수 있음.**
+
+1. **불용어 파일 생성**
+    - PostgreSQL의 **불용어 파일은 `pg_ts_dict` 테이블에서 관리됨.**
+    - 예제: `custom_stopwords` 파일 생성 (`/usr/share/postgresql/tsearch_data/` 위치)
+    
+    📌 **파일 내용 (`custom_stopwords.stop`)**
+    
+    ```
+    the
+    is
+    a
+    of
+    and
+    ```
+    
+2. **사용자 정의 불용어 사전 등록**
+    
+    ```sql
+    CREATE TEXT SEARCH DICTIONARY custom_dict (
+        TEMPLATE = simple,
+        STOPWORDS = 'custom_stopwords'
+    );
+    ```
+    
+    ✅ `custom_stopwords` 목록을 불용어 사전으로 등록.
+    
+3. **새로운 텍스트 구성(`TS Configuration`) 생성**
+    
+    ```sql
+    CREATE TEXT SEARCH CONFIGURATION custom_fts (COPY = english);
+    ALTER TEXT SEARCH CONFIGURATION custom_fts
+        ALTER MAPPING FOR asciiword, word WITH custom_dict, english_stem;
+    ```
+    
+    ✅ `custom_fts`라는 **새로운 전문 검색 구성 생성**
+    
+    ✅ **기존 `english` 설정을 복사하고, 불용어 사전을 추가로 적용**
+    
+4. **불용어 적용 테스트**
+    
+    ```sql
+    SELECT to_tsvector('custom_fts', 'This is a custom text for testing.');
+    ```
+    
+
+🔍 **결과**
+
+```
+'custom':3 'text':4 'test':6
 ```
 
-- `is`, `a` 같은 단어는 불용어로 처리되어 색인에서 제외됩니다.
+✅ `"this"`, `"is"`, `"a"` 같은 불용어가 제거
 
 ---
 
-## 7️⃣ 전문 검색의 실제 적용
+# 7️⃣ 전문 검색의 실제 적용
 
-### **제목과 본문을 함께 검색**
+## **이메일 검색 예시**
 
-제목(subject)과 본문(body)을 합쳐서 검색할 수 있습니다.
+```sql
+SELECT * FROM messages
+WHERE to_tsvector('english', body) @@ to_tsquery('english', 'meeting & schedule');
+```
+
+- 'meeting'과 'schedule' 단어가 모두 포함된 이메일 본문을 검색
+
+## **제목과 본문을 함께 검색**
 
 ```sql
 SELECT * FROM messages
 WHERE to_tsvector('english', subject || ' ' || body) @@ to_tsquery('english', 'project & update');
 ```
 
-- 제목 또는 본문에 'project'와 'update'가 모두 포함된 메시지를 찾음
+- 제목과 본문을 합쳐서 'project'와 'update' 단어가 모두 포함된 이메일을 검색
 
 ---
 
-## 8️⃣ 전문 검색 성능 최적화
+# 8️⃣ 전문 검색 성능 최적화
 
-### **인덱스 활용**
+## **인덱스 활용**
 
-- `to_tsvector()`를 사용하여 **미리 색인화된 데이터**를 활용하면 검색 성능이 크게 향상됩니다.
-- GIN 인덱스를 적용하면 **수백만 개의 행에서도 빠르게 검색 가능**합니다.
+- `to_tsvector` 함수를 사용하여 GIN 인덱스를 생성하면 대량의 텍스트 데이터에서도 빠른 검색이 가능
 
-### **정규화 및 토큰화**
+## **정규화 및 토큰화**
 
-- **소문자 변환** 및 **불필요한 문자의 제거**를 수행하여 검색 효율을 높일 수 있습니다.
-
----
-
-## 9️⃣ 전문 검색의 한계와 고려사항
-
-- **언어 지원**: PostgreSQL은 여러 언어를 지원하지만, 각 언어별로 다른 토큰화 및 불용어 처리가 필요합니다.
-- **복합 검색**: 여러 컬럼을 동시에 검색할 경우 `tsvector`를 결합하여 인덱스를 최적화해야 합니다.
-- **정확도 vs 성능**: 검색 정확도를 높이기 위한 복잡한 쿼리는 성능을 저하시킬 수 있으며, 적절한 균형이 필요합니다.
+- 텍스트를 소문자로 변환하고, 불필요한 문자를 제거하여 검색 효율을 향상
 
 ---
 
-## 📌 참고 자료
+# 9️⃣ 전문 검색의 한계와 고려사항
 
-- [다이어그램의 파워포인트 슬라이드](https://www.pg4e.com)
-- [이 강의의 샘플 SQL 명령](https://www.pg4e.com)
-- 강의 URL: [https://www.pg4e.com/lectures/05-FullText](https://www.pg4e.com/lectures/05-FullText)
+- **언어 지원**: PostgreSQL은 여러 언어를 지원하지만, 언어별로 토큰화 및 불용어 처리가 다를 수 있음
+- **복합 검색**: 여러 컬럼을 동시에 검색할 경우, 각 컬럼에 대한 `tsvector`를 생성하고 결합하여 인덱스를 생성해야 함
+- **정확도 vs 성능**: 정확도를 높이기 위한 복잡한 쿼리는 성능 저하를 초래할 수 있으므로, 적절한 균형이 필요
