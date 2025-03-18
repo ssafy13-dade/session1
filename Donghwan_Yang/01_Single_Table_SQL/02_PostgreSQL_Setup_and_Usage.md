@@ -49,59 +49,79 @@ Running PostgreSQL on Linux is preferred due to its stability, security, and bet
 ## Setting Up PostgreSQL in Linux
 
 ### 1. Installing PostgreSQL
+
 First, install PostgreSQL using the package manager:
+
 ```sh
 sudo apt update
 sudo apt install postgresql postgresql-contrib  # Debian-based systems
 ```
+
 For Red Hat-based systems:
+
 ```sh
 sudo yum install postgresql-server postgresql-contrib
 ```
 
 ### 2. Starting the PostgreSQL Service
+
 Enable and start the PostgreSQL service:
+
 ```sh
 sudo systemctl enable postgresql
 sudo systemctl start postgresql
 ```
+
 To check the status:
+
 ```sh
 sudo systemctl status postgresql
 ```
 
 ### 3. Creating a New PostgreSQL User and Database
+
 PostgreSQL runs under the `postgres` user by default. Switch to this user:
+
 ```sh
 sudo -i -u postgres
 ```
 
 Create a new user:
+
 ```sh
 createuser --interactive --pwprompt
 ```
+
 It will prompt for:
+
 - Username
 - Password
 - Role permissions (Superuser, Database Creation, Role Creation)
 
 Create a new database:
+
 ```sh
 createdb mydatabase
 ```
 
 ### 4. Connecting to PostgreSQL
+
 To connect to the database using `psql`:
+
 ```sh
 psql -U myuser -d mydatabase
 ```
+
 Alternatively, if using the default `postgres` user:
+
 ```sh
 psql
 ```
 
 ### 5. Basic Database Commands
+
 Once inside `psql`, you can run basic SQL commands:
+
 ```sql
 \l  -- List all databases
 \c mydatabase  -- Connect to a database
@@ -110,7 +130,9 @@ Once inside `psql`, you can run basic SQL commands:
 ```
 
 ### 6. Creating a Table in PostgreSQL
+
 Once connected to your database, you can create a new table using the `CREATE TABLE` statement:
+
 ```sql
 CREATE TABLE users (
     id SERIAL PRIMARY KEY,
@@ -128,20 +150,96 @@ CREATE TABLE users (
 - `created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP` - Automatically records the time of insertion.
 
 ### 7. Inserting Data into the Table
+
 To insert records into the `users` table:
+
 ```sql
 INSERT INTO users (name, email, age) VALUES ('Alice', 'alice@example.com', 25);
 INSERT INTO users (name, email, age) VALUES ('Bob', 'bob@example.com', 30);
 ```
 
 ### 8. Querying Data from the Table
+
 Retrieve all users:
+
 ```sql
 SELECT * FROM users;
 ```
+
 Retrieve a specific user by email:
+
 ```sql
 SELECT * FROM users WHERE email = 'alice@example.com';
 ```
 
-This setup ensures a properly configured PostgreSQL environment for development and database management.
+---
+
+## CRUD Operations in PostgreSQL
+
+### 1. Create (INSERT)
+
+Adding new records into a table:
+
+```sql
+INSERT INTO users (name, email, age) VALUES ('Charlie', 'charlie@example.com', 28);
+```
+
+### 2. Read (SELECT)
+
+Retrieve all data:
+
+```sql
+SELECT * FROM users;
+```
+
+Retrieve specific columns:
+
+```sql
+SELECT name, email FROM users;
+```
+
+Retrieve records using `LIKE` (pattern matching):
+
+```sql
+SELECT * FROM users WHERE email LIKE '%example.com';
+```
+
+- `%` is a wildcard that matches any sequence of characters.
+
+### 3. Update (UPDATE)
+
+Updating a user's age:
+
+```sql
+UPDATE users SET age = 29 WHERE email = 'charlie@example.com';
+```
+
+### 4. Delete (DELETE)
+
+Deleting a user from the table:
+
+```sql
+DELETE FROM users WHERE email = 'bob@example.com';
+```
+
+Delete all records (be cautious):
+
+```sql
+DELETE FROM users;
+```
+
+### Using `*` in SQL
+
+- `*` is a wildcard used to select all columns in a query.
+- Example:
+
+```sql
+SELECT * FROM users;
+```
+
+- Returns all columns from the `users` table.
+
+---
+
+This setup ensures a properly configured PostgreSQL environment for development and database management, along with a strong understanding of CRUD operations.
+
