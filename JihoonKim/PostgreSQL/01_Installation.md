@@ -1,31 +1,6 @@
-# Introduction
+# 설치 및 기본 세팅
 
-### SQL (Structured Query Language)
-
-- Database에 명령어를 입력하기 위한 언어
-- CRUD
-  - Create & Insert data
-  - Read & Select some data
-  - Update data
-  - Delete data
-
-### 기본 용어
-
-- Database: 한개 또는 여러개의 테이블을 가진 구조
-- Relation (Table): Record와 Field를 가지는 구조
-- Record (Tuple, Row): 필드들에 대한 단일 집합이며, 일반적으로 객체라고 부름
-- Field (Attribute, Column): 객체들이 가지는 하나의 속성
-
-<img src="./Images/01_01.png" width="600px">
-
-### 주요 Database 시스템
-
-- PostgreSQL: 완전 오픈 소스인 DB 시스템
-- Oracle: 상업용 DB 시스템이며, 규모가 크고 기업에서 주로 이용
-- MySQL: 상업적 오픈 소스인 DB 시스템이며, 빠르고 확장성이 좋음
-- SqlServer: 마이크로소프트에서 개발한 관계형 DB 시스템
-
-### PostgreSQL 시작하기 (Linux/Ubuntu)
+- Linux/Ubuntu 환경에서 postgresql-common (17.4 버전) 설치
 
 - PostgreSQL 설치
 
@@ -81,6 +56,8 @@
   psql people pg4e
   ```
 
-- 주의사항
-  - 프롬프트가 `#`으로 표시되는 슈퍼 유저에서는 꼭 필요한 명령어만 실행
-  - 프롬프트가 `=>`로 표시되는 일반 유저에서 DB 관리 진행
+#### 주의사항
+
+- 프롬프트가 `#`으로 표시되는 슈퍼 유저에서는 꼭 필요한 명령어만 실행
+  - 데이터베이스 생성, 새로운 유저 생성, 유저 권한 변경 등
+- 프롬프트가 `=>`로 표시되는 일반 유저에서 DB 관리 진행
