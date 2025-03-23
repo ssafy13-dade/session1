@@ -25,7 +25,6 @@
 ## 4. Structured Query Language (SQL)
 - **SQL (Structured Query Language)**  
   - 데이터베이스 명령어 사용 언어
-  - 미국 정부와 산업계의 협력으로 개발됨
   - **NIST (National Institute of Standards and Technology)** 주도
 
 ---
@@ -184,30 +183,3 @@ CREATE TABLE users (
   - 정렬, 필터링, 집계 등 다양한 쿼리 작성  
 
 ---
-
-## 🎯 주요 SQL 예제 요약
-```sql
--- SELECT
-SELECT * FROM users WHERE email = 'csev@umich.edu';
-
--- UPDATE
-UPDATE users SET name = 'Charles' WHERE email = 'csev@umich.edu';
-
--- INSERT
-INSERT INTO users (name, email) VALUES ('Ted', 'ted@umich.edu');
-
--- DELETE
-DELETE FROM users WHERE email = 'ted@umich.edu';
-
--- ORDER BY
-SELECT * FROM users ORDER BY email;
-
--- LIKE
-SELECT * FROM users WHERE name LIKE '%e%';
-
--- COUNT
-SELECT COUNT(*) FROM users WHERE email = 'csev@umich.edu';
-
--- LIMIT, OFFSET
-SELECT * FROM users ORDER BY email OFFSET 1 LIMIT 2;
-```
