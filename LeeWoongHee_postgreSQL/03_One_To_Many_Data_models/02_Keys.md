@@ -29,3 +29,19 @@
 - Logical key: 외부 식별용 (사람)
 - Foreign key: 테이블 간 연결
     - Foreign key는 참조하는 테이블 뒤에 `_id`를 붙이는 식으로 하면 구조가 명확하다.
+- Sample
+```
+[artist]
+- id (PK)
+- name
+
+[album]
+- id (PK)
+- title
+- artist_id (FK → artist.id)
+
+[track]
+- id (PK)
+- title (logical key)
+- album_id (FK)
+```
