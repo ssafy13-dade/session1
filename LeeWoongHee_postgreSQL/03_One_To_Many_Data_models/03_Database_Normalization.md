@@ -22,6 +22,7 @@
 ## 2. 관계 구성 순서
 ![alt text](image-4.png)
 1. Logical key 구상 (논리)
+    - `후보키 (candidate key)` 중 선택
     - `사람`이 직접 `UI`에서 `검색`하고 `구별`하는 기준이 된다.
         - `문자열` 기반의 키
         - `Logical key인 컬럼은 자주 사용될 것 같으니 idx로 만든다`라는 의미도 내포됨.
@@ -33,3 +34,8 @@
 3. Foreign key
     - `테이블 간의 관계`를 정확히 연결한다.
     - 다른 테이블의 `primary key`를 참조한다.
+
+## 3. 요약
+- **Logical key 선택 &rightarrow; Primary key 선택 &rightarrow; Foreign key 설정 &rightarrow; 반복**
+- Foreign key를 참조하는 테이블의 primary key와 연결
+- 각 테이블에는 logical key가 위치.
